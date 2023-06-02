@@ -1,0 +1,52 @@
+\section{Partial Differential Equations}
+
+Partial Differential equations (PDEs) are the heart of many physical systems that we are interested in.  We will study three main classes of PDEs
+\begin{enumerate}
+    \item Hyperbolic
+    \item Elliptic
+    \item Parabolic
+\end{enumerate}
+
+\noindent\textbf{Hyperbolic:}
+Hyperbolic PDEs characterized by real distinct propagation speeds.  As such their usual physical intepretation involves a state that evolves in time in accordance to a known signal speed. An example of this is the wave equation:
+\be
+\dddt{f} - \dddx{f} = 0
+\ee
+To solve these equations they require boundary conditions in space and initial conditions in time. The most typical example of hyperbolic equations are the compressible fluid equations.  
+
+\noindent\textbf{Elliptic:}
+Elliptic PDEs characterized by effectively infinite propagation speeds.  As such they require boundary conditions everywhere as their solution relies on the BCs.  Their solutions are also smooth.  An example of this is the Poisson equation:
+\be
+\dddt{f} + \dddx{f} = g
+\ee
+In addition to Poisson, other examples of elliptic equation are electrostatics, (Newtonian) gravity, etc.  Incompressible fluid flow also has an elliptic nature as the incomoressibility conditions is elliptic. 
+
+\noindent\textbf{Parabolic:}
+Parabolic PDEs somewhat between hyperbolic and elliptic equations. They do propagrate in time so only require boundary conditions on the spatial part and while they can allows sharp solutions, it likes to smooth it out.  An example is the diffusion equation"
+\be
+\ddt{f} - \dddx{f} = 0
+\ee
+
+The origin of the name comes from a classification of conic sections.  For instance for a general PDE:
+\be
+au_{xx} + bu_{xy} + cu_{yy} + du_x + e u_y + f = g
+\ee
+It is hyperbolic if $b^2 - 4ac > 0$, elliptic if $b^2 - 4ac < 0$ and parabolic if $b^2-4ac = 0$.  
+
+Now we already know how to solve ODE problems so our goal here is to convert PDEs to ODEs and use the standard techniques to solve them.  There is no general way of converting an arbitrary PDEs to an ODE though this can be done for certain problems by defining a new variable that mixes two or more of the independent variables, e.g., self-similar methods.  However, this works for a very special subset of problems and don't work generally. 
+
+As a result, the usual method for solving (hyperbolic and parabolic) PDEs is to descretized space and approximate the spatial derivatives on that space and use ODE solvers to advance the solution in time.  There are a number of possible ways to do this. 
+\begin{enumerate}
+    \item finite difference: values of a function are stored at discrete points -- replace derivatives with 
+    \item finite volume: the values of a function are average over the volume centered around a grid point.  Because of this, the methods here involve replacing differentiation with integration of a flux over a the boundary of the volume.
+    \item finite element: kinda like spectral methods, but with compact basis functions. 
+    \item spectral methods: decompose the values of a function on space to Fourier components. Solve for the evolution of the Fourier components. Amazing for smooth flows - exponential convergence.
+    \item particle methods: break up space into discrete sampled points the evolve at some velocity -- only really useful for hyperbolic equations.
+\end{enumerate}
+
+\input{advection.tex}
+
+\input{elliptic.tex}
+
+\input{parabolic.tex}
+

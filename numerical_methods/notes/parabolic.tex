@@ -1,0 +1,32 @@
+\subsection{Parabolic Problems}
+
+As stated above, the parabolic problem has properties of both the hyperbolic and elliptic problem.  In particular, we will see that it can have very large propagation speeds like the elliptic problem, but can be solve in a flux-conservative way as in the hyperbolic problem.  Lets start with a prototypical problem
+\be
+\ddt{\Phi} = \dddx{\Phi}\label{eq:diffusion}
+\ee
+An identification of the flux to the $F = -\partial\Phi/\partial x$ allows us to write this like the flux-conservative equation
+\be
+\ddt{\Phi} + \ddx{F} = 0
+\ee
+If we presume the analytic ansatz
+\be
+\Phi(t,x) = \frac{\exp{-x^2/4t}}{t^{1/2}} + \Phi_0,
+\ee
+we see that it solve the diffusion equation (\ref{eq:diffusion}).  Lets try to solve this problem numerically.  Lets use a standard centered expression for the second derivative in Space
+\be
+\frac{\Phi^{n+1}_i - \Phi^n_i}{\Delta t} = \frac{\Phi^n_{i+1} - 2\Phi^n_i + \Phi^n_{i-1}}{\Delta x^2}
+\ee
+We can examine its stability in space with a single Fourier mode $\Phi_i^n = A^n\exp(-i2\pi x_i/L)$.  This gives
+\be
+\left|\frac{A^{n+1}}{A^n}\right| = \left|1 + 2\frac{\Delta t}{\Delta x^2}\left(\cos(2\pi\Delta x/L)-1\right)\right| < 1
+\ee
+which implies that $\Delta t \propto \Delta x^2/2$, e.g., the equivalent ``Courant'' number is $\alpha_{\rm CFL} = 2\Delta t/\Delta x^2$  So the timestep rapidly comes down as $\Delta x$ (higher resolution) shrinks.  
+
+We can numerically solve this once we specific the boundary conditions over a finite domain.  However, we will note that the analytic solution spreads from $x=(-\infty,\infty)$.  However, if we put the boundaries far enough away, it will not ``pollute'' the solution too much in the region of interest.  Here the fact that the timescale goes like $t\sim L^2$ helps. 
+
+Now lets examine the code in detail:
+
+\lstinputlisting[language=Python]{code/parabolic.py}
+
+
+

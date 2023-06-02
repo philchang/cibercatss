@@ -1,0 +1,42 @@
+\subsection{Multiphysics PDEs}
+
+In most of astrophysics, the relevant equations spans several forms.  Take for instance the equations of gas or fluid bodies:
+\be
+\ddt{\rho} + \grad{\rho\vel} &=& 0 \\
+\ddt{\vel} + \vel\cdot\grad\vel &=& -\frac{1}{\rho} \grad P + \grad\Phi \\
+\gradd\Phi = 4\pi G\rho
+\ddt{e}
+\ee
+The hydrodynamics equations are hyperbolic, while the gravity equation is elliptic.  We know how to solve each, but lets estimate the amount of computations that is need.  Each timestep is given by the courant condition or $\Delta t = \Delta x/|\vel|$, where $|\vel|$ is the scale of the velocity.  For sufficient resolution, there might be $N$ grid points per linear dimension.  So per timestep, there are $N^3$ computations.  And to advance to a time $T$, there are $T/\Delta t \propto \Delta x^{-1} \propto N$ timesteps. So as I go up in resolution, I need to scale the computation like $O(N^4)$.  So even with computers advancing rapidly, I need computers to speed up by a factor of 16 to even go up a factor of 2 in resolution, a factor of $10^4$ to go up a factor in 10 in resolution. 
+
+Now suppose I want to solve gravity.  Now I need to solve gravity {\it once per time step}.  This can be a rather severe restriction.  Already, for the hydro part, I am looking at $N^3$ operations.  However, for the elliptic solvers, you are looking at $O(N_{\rm pts}^2)$ or $O(N^6)$ operations per timestep.  This rapidly make is unsuitable for simulations.  
+
+The same would be true for parabolic equations, think viscosity or diffusion.  Here the timestep scales like $N^2$ rather than $N$, so pretty soon diffusion rather than hydrodynamics sets to the timestep.  
+Given that it appears that hydro is the fastest step, we now look at methods that can solve the elliptic and parabolic parts faster.
+
+The first is to consider the gravity solver.  While there are general methods to accelerate elliptic problems, we will force on the poisson problem for obvious reasons.  Here lets consider a collection of n-masses $m_1 . . . m_n$.  How would I compute the force on the ith mass due to everyone else.
+\be
+\vec{F}_i = \sum_{j\neq i}\frac{Gm_im_j}{r_{ij}^2}\hat{r}_{ij}
+\ee
+This is called the N-body problem, and the method above is called direct summation because I am directly summing all the particles.  This is simple and fairly easy to code, but I need to perform $O(N^2)$ operations per step, which for $N=N_g^3$ gridpoints reduces it to $O(N_g^6)$, which is the same as before.
+However, direct summation is used for simulations of globular clusters because it is the most accurate method that is available. 
+
+Lets try something else.  Suppose we can compute the Fourier transform of $\Phi$.  In this case,
+\be
+    \Fourier{\gradd\Phi} = k^2\tilde{\Phi} = 4\pi G\tilde{\rho},
+\ee
+where $\tilde{x}$ is the fourier transform of $x$.  Then 
+\be
+\Phi = \Fourier{\frac{4\pi G\tilde{\rho}}{k^2}}^{-1}.
+\ee
+This is fast as long as there exists a rapid way of computing the Fourier transform and its inverse. Fortunately we can use the fast fourier transform (FFT), which for one linear dimension is $O(N_g\log(N_g))$, so we are looking at $O(N_g^3\log(N_g^3))$, which is doable. 
+
+Lets try another method.  If we have a collection of masses that are far away from a mass $m_i$, then the potential or force from those masses can be replaced by a single mass with a mass equal to the collection at the the center of mass of that collection. So we can reduce our sum over that collection to a single sum. This is the key idea behind the Barne-Hut tree. 
+
+This algorithm is really powerful as it is also the basis for rapid searching of neighbors and the like.  So it does pay to take a closer look at this algorithm. The basic data set is a box with a certain center and size.  The box can either contain up to K particles (usually 1) or 8 boxes that are half the linear size. For this reason, this structure is called an octree. The tree refers to the link between the larger boxes and the smaller boxes that are contained within them.  These smaller boxes can in turn contain zero up to K particles or 8 smaller boxes yet again. A box can either contain particles or boxes, but not both.  The particle containing boxes are called leaf nodes.
+
+Now imagine that we need to compute the force on a particle i.  To compute the force, I will have to sum over the K particles in the same box as particle i.  And then I have to sum over the all the largest boxes that do not contain particle i.  If the particles are roughly evenly distributed, the number of operations are $\sim K + 7*\log(N)$ operations.  This is much smaller than $N$ operations in a direct sum. So the efficiency of this algorithm is $O(N\log(N))$, which is much quicker than $O(N^2)$.
+
+Now the question is that how do you construct such an tree.  We can build it by one-by-one insertion.  Suppose you insert a particle at the top level node.  It goes down the tree until it reaches a leaf node.  If the leaf node take take on more particles, the particle is inserted into that leaf node. If the leaf node cannot take on another particle, the leaf node is split into 8 smaller boxes and the particles redistributed into the smaller boxes. It turns out that this operation is also $O(N\log(N))$ so it doesn't add that much to the computation.
+
+

@@ -1,0 +1,111 @@
+\documentclass[12pt,onecolumn]{article}
+\usepackage{epsfig}
+\usepackage{natbib}
+\usepackage{caption}
+\usepackage{multicol,wrapfig}
+%\usepackage{deluxetable}
+\usepackage{graphics,graphicx}
+\usepackage{rotating}
+\usepackage{amssymb}
+\usepackage{amsmath,fancyhdr}
+%\usepackage{tweaklist}
+\usepackage{cuted}
+\usepackage{hyperref}
+\usepackage{xspace}
+\usepackage[table]{xcolor}
+\usepackage{listings}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Add space between paragraphs
+\setlength{\parskip}{0.4\baselineskip}%
+% Add or remove space between lines (1.0 = default spacing)
+\linespread{1.0}
+\setlength{\parindent}{0pt} % no paragraph indent
+
+\citestyle{abbrv}
+
+%\citestyle{aa}
+%\citestyle{nature}
+%\bibpunct[,]{[}{]}{,}{n}{,}{}
+
+%\renewcommand{\rmdefault}{cmr}
+
+%\newcommand{\phil}[1]{ \textcolor{blue}{\bf #1} }
+
+\makeatletter
+\renewcommand{\section}{\@startsection%
+{section}{1}{0mm}{-0.5\baselineskip}%
+{0.1\baselineskip}{\large\normalfont\bfseries}}%
+\renewcommand{\subsection}{\@startsection%
+{subsection}{1}{0mm}{-0.2\baselineskip}%
+{0.1\baselineskip}{\normalfont\bfseries}}%
+\makeatother
+
+\setlength{\textwidth}{6.5in}
+\setlength{\textheight}{9in}
+\setlength{\topmargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\hoffset}{0in}
+\setlength{\voffset}{0in}
+\setlength{\textfloatsep}{0.0in}
+\setlength{\floatsep}{0.0in}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\newcommand{\be}{\begin{eqnarray}}
+\newcommand{\ee}{\end{eqnarray}}
+\newcommand{\code}[1]{\lstinputlisting[language=Python]{#1}}
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\numberwithin{equation}{section}
+\renewcommand{\vec}[1]{\boldsymbol{#1}}
+\newcommand{\mtx}[1]{\boldsymbol{#1}}
+\newcommand{\grad}{\vec{\nabla}}
+\newcommand{\order}{\mathcal{O}}
+
+\newcommand{\dddt}[1]{\frac{\partial^2 #1}{\partial t^2}}
+\newcommand{\dddx}[1]{\frac{\partial^2 #1}{\partial x^2}}
+\newcommand{\ddt}[1]{\frac{\partial #1}{\partial t}}
+\newcommand{\ddx}[1]{\frac{\partial #1}{\partial x}}
+\newcommand{\gradd}{\nabla^2}
+\newcommand{\vel}{\vec{v}}
+\newcommand{\Fourier}[1]{\mathcal{F}(#1)}
+
+\begin{document}
+{\large \bf Notes for Physics 801: Numerical Methods for Physics}
+
+\input{statistical_methods.tex}
+%\input{data.tex}
+\newpage
+\input{ode.tex}
+\newpage
+\input{parallel.tex}
+\newpage 
+\input{pde.tex}
+
+\end{document}

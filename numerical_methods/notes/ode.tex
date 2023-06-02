@@ -1,0 +1,99 @@
+\section{Ordinary Differential Equations}
+
+\subsection{Euler's Method}
+
+Consider the following first order ordinary differential equation.
+\be
+\frac {d\vec{y}}{dt} = \vec{f}(\vec{y}, t),
+\ee
+where $\vec{y}$ is a vector of variables, $t$ is the independent variable, and $\vec{f}$ is some arbitrary vector function of $\vec{y}$ and $t$.  We can use our definition of derivative to write: 
+\be
+\frac {d\vec{y}}{dt} \approx \frac {\vec{y}_{i+1} - \vec{y}_i}{\Delta t} = \vec{f}(\vec{y}_i, t_i),\label{eq:explicit}
+\ee
+where $\Delta t = t_{i+1} - t_i$.  This is not the only choice that could have been made, it is also possible to write it as 
+\be
+\frac {\vec{y}_{i+1} - \vec{y}_i}{\Delta t} = \vec{f}(\vec{y}_{i+1}, t_{i+1}). \label{eq:implicit}
+\ee
+The difference between these two is the choice of either $t_{i}$ or $t_{i+1}$ on the right hand side.  Equation (\ref{eq:implicit}) gives rise to implicit methods which are harder to code up, but offers potentially greater stability and speed.  Instead, we will focus on equation (\ref{eq:explicit}).  
+
+If we know the value at $\vec{y}(t_i)$, we can solve for $\vec{y}(t_{i+1})$ to be
+\be
+\vec{y}_{i+1} = \vec{y}_i + \vec{f}(\vec{y}_i, t_i)\Delta t.\label{eq:euler method}
+\ee
+This method is known as Euler's method.  As an aside, it we take $\vec{f}$ to be a scalar function of just $t$, then it just becomes an ordinary integral.  Hence, the methodology we describe here is directly relevant for numerical integration so we don't need a separate discussion for it.
+
+Equation (\ref{eq:euler method}) gives the correct answer for $\Delta t \rightarrow 0$, but it should never be used solving any equations you code up on a computer as superior methods abound. But it is easy and simple to code up and introduces the idea of generic algorithms.  
+
+\subsection{Second Order Runge-Kutta Method}
+
+Runge-Kutta methods are an example of predictor-corrector methods.  That is, it ``predicts'' the value at $\vec{y}_{i+1}$ from the current solution at $\vec{y}_i$.  Using this predicted value, it performs a ``corrector'' step to increase the accuracy of the solution.  The generic two-step Runge-Kutta method is as follows:
+\be
+\vec{k}_1 &=& \Delta t \vec{f}(\vec{y}_i, t_i) \\
+\vec{k}_2 &=& \Delta t \vec{f}(\vec{y}_i + \beta \vec{k}_1, t_i + \alpha \Delta t) \\
+\vec{y}_{i+1} &=& \vec{y}_i + a \vec{k}_1 + b \vec{k}_2
+\ee
+where $\vec{k}_1$ is the ``predictor'' and is the same as an Euler step, $\vec{k}_2$ is the ``corrector'', and the $i+1$ step is some linear combination of the two.  The constants, $\alpha$, $\beta$, $a$, and $b$ are chosen to make the entire algoritm accurate to $\mathcal{O}(\Delta t^3)$.  To determine these unknown constants, let perform a Taylor expansion of $\vec{y}_{i+1}$
+\be
+\vec{y}_{i+1} = \vec{y}_i + \frac{d\vec{y}}{d t}(t_i)\Delta t + \frac 1 2 \frac{d^2\vec{y}}{dt^2}(t_i)\Delta t^2
+\ee
+Now 
+\be
+\frac{d^2\vec{y}}{dt^2}(t_i) &=& \frac {d\vec{f}(\vec{y},t)}{dt} = \frac {\partial \vec{f}(\vec{y},t)}{\partial t} + \frac{d\vec{y}}{dt}\cdot\vec{\nabla}_{\vec{y}}\vec{f} \\
+&=& \frac {\partial \vec{f}(\vec{y},t)}{\partial t} + \vec{f}\cdot\vec{\nabla}_{\vec{y}}\vec{f}
+\ee  
+Thus we have 
+\be
+\vec{y}_{i+1} = \vec{y}_i + \vec{f}(\vec{y}_i, t_i)\Delta t + \frac 1 2 \left(\frac {\partial \vec{f}(\vec{y}_i,t_i)}{\partial t} + \vec{f}(\vec{y}_i,t_i)\cdot\vec{\nabla}_{\vec{y}}\vec{f}(\vec{y}_i,t_i)\right)\Delta t^2 +\mathcal{O}(\Delta t^3)\label{eq:2nd order}
+\ee
+Now we Taylor expand out $\vec{k}_2$ to find
+\be
+\vec{k}_2 &=& \Delta t \vec{f}(\vec{y}_i + \beta \vec{k}_1, t_i + \alpha \Delta t) \\
+&=& \Delta t\left( \vec{f}(\vec{y}_i, t_i) + \alpha\Delta t\frac {\partial \vec{f}(\vec{y}_i,t_i)}{\partial t} + \beta\Delta t \vec{f}\cdot\vec{\nabla}_{\vec{y}}\vec{f}(\vec{y}_i,t_i)\right)
+\ee
+Putting this all together, we have 
+\be
+\vec{y}_{i+1} &=& \vec{y}_i + (a+b)\Delta t \vec{f}(\vec{y}_i, t_i) + b\Delta t^2\left(\alpha\frac {\partial \vec{f}(\vec{y}_i,t_i)}{\partial t} + \beta\vec{f}\cdot\vec{\nabla}_{\vec{y}}\vec{f}(\vec{y}_i,t_i) \right)+\mathcal{O}(\Delta t^3)\label{eq:rk2 expansion}
+\ee
+Comparing Equations (\ref{eq:2nd order}) and (\ref{eq:rk2 expansion}), we get the following conditions:
+\be
+a+b = 1 \qquad b\alpha = \frac 1 2 \qquad b\beta = \frac 1 2,
+\ee
+or 3 equation for 4 unknowns.  So that mean there exist a infinite number of second order schemes that are possible, e.g., error per step that goes likes $\Delta t^3$, so the total error over an interval goes like $\Delta t^2$.  So using $\alpha$ as a parameter, we have 
+\be
+\beta = \alpha \qquad b = \frac 1 {2\alpha} \qquad a = 1 - \frac 1 {2\alpha}
+\ee
+So a generic second order Runge-Kutta scheme is then
+\be
+\vec{k}_1 &=& \Delta t \vec{f}(\vec{y}_i, t_i) \\
+\vec{k}_2 &=& \Delta t \vec{f}(\vec{y}_i + \alpha \vec{k}_1, t_i + \alpha \Delta t) \\
+\vec{y}_{i+1} &=& \vec{y}_i + \left(1 - \frac 1 {2\alpha}\right) \vec{k}_1 + \frac {\vec{k}_2} {2\alpha} 
+\ee
+
+A few famous examples are 
+\begin{itemize}
+    \item Midpoint method: $\alpha = 1/2$ Estimate the values of y at the midpoint and solve for the derivative at the midpoint.  Use this midpoint derivative to complete the integration.  Note that prefactor in front of $\vec{k}_1$ in this case is zero.
+    \item Heun's Method: $\alpha = 1$ Estimate the values of y at the endpoint and give equal weight to both starting and endpoints to compute the derivative.
+\end{itemize}
+
+It turns out that for the most part this is all you really need.  We should use the generic ode solvers that come with scipy generally. 
+
+\subsection{Higher Order ODEs}
+
+Thus far we have discussed the case of first order odes.  What about higher order ODEs.  It turns out that there is a very simple extension to arbitrary high order ODEs.  The trick is it identify higher order derivatives as variables in themselves.  Consider the ODE
+\be
+\sum_n^N\frac{d^n f}{dx^n} = 0
+\ee
+We can write this as a sum first order ODEs by the identification of 
+\be
+f_i = \frac{df_{i-1}}{dx} \qquad\textrm{and}\qquad f_0 = f
+\ee
+Thus we have 
+\be
+\frac{df_{N-1}}{dx} + \sum_i^{N-1} f_i = 0,\\
+\frac{df}{dx} = f_1\\
+\frac{df_1}{dx} = f_2\\
+ . . . . \\
+\frac{df_{N-2}} = f_{N-1}.
+\ee
+So this converts a Nth order ODE to N first order ODEs, which we can solve.
+

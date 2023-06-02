@@ -1,0 +1,112 @@
+\section{Optimization and Parallelization}
+
+\subsection{Optimization}
+
+There are two kinds of optimization.  There is optimizing human time and effort and optimizing machine time and effort.  Generally human time and effort is far more valuable than machine time and effort which is why we have use python in this class even though it is thousands of times slower than C or fortran.  The reason is that it is far cleaner and easier to use and link up to libraries than C or fortran.  
+
+However, this is not always the case and so we should discuss a few ways to do optimization and parallelization of code. In this section we will discuss python optimization.  The key fact about python optimization is several-fold.  But before optimizing you should consider the following questions
+\begin{enumerate}
+    \item Is your code correct?
+    \item Do you need to optimize?
+    \item Do you really need to optimize?
+    \item Optimize is not parallelization -- usually do this last.
+    \item Optimization involves tradeoffs.  Be careful what you wish for.
+\end{enumerate}
+
+There are a few steps to optimization:
+\begin{enumerate}
+\item profile
+\item profile again.
+\item check the hotspots.
+\item payoff in optimization: modify your use case, use better algorithms, use builtin functions, use numba, pre-compiled code
+\end{enumerate}
+
+So at this point, you have decide to optimize.  We will take the N-body problem we discussed earlier as a starting point. Jupyter notebooks has a really useful magic function for profiling called \%prun.  Lets see this in action.
+
+\textbf{Go to Jupyter notebook.}
+
+Now we will optimize this function in several ways.  These are in order:
+\begin{enumerate}
+    \item Writing optimal python -- using numpy functions whenever possible -- for this case I got a speedup of 4-5x
+    \item Using Numba -- this works well with numpy code.  It use a decorator @jit or @njit which using a just-in-time compiler for great speedups.  This is super easy, but also you have no control over what it does, so the result can be good or horrible.  
+    \item Using cython -- this requires some knowledge of c and data types that is native to computers.
+    \item Using fortran and f2py -- I got a 600x speedup with this. 
+\end{enumerate}
+
+For fortran and cython, it is important to keep in mind that c and to some extent fortran has been the dominant language/scheme of computing over the last 50 years and so to some degree processors are designed to work with these languages. At one point, there was designs to build cpus optimized for lisp (scary thought).  Let think about how a cpu works.  
+
+A cpu consists of a integer unit and a floating point unit.  Early cpus prior to the pentium are mostly an integer unit and floating point was slow.  But these days integer and floating point computations are similarly fast.  So the native data types that give great speed are int and float (or double).  So you want to map it to these things whenever you can. 
+
+So the key idea for cython is to take your python code and judiously use ``cdef int'', ``cdef double'', or ``cdef double []'' in the correct places to greatly speed up the code.  
+
+\subsection{Parallelization}
+
+The choice of python for this course was unfortunate in one crucial aspect and that is the ability of python to be parallelized easily on one machine.  Modern cpus have $>4$ cores and thus the ability to use more than one core for computation are a real boon.  Python is especially limited in this respect, but there are parallelization methods that we can discuss for python.  
+
+The simpliest parallelization strategy that you will encounter and probably the most common is ``embarassingly'' parallel.  This occurs is many situations such as large data analysis or parameter studies.  Generally the paradigm that one should think about for ``embarassingly'' parallel problems is something called MapReduce.  Here we map a computation to a large number of computers/cores and then reduce the information to a simpler data set at the end.  To see how this works, let us consider the counting of the numbers of words in ``War and Peace''.  You could do this by sitting down and counting the entire book, or you can assign each page to a different person.  Each person will count the words on the page and you can just add up all the counts together.  The assignment of a person to a task is the map and the collation of information returned is the reduce part.  
+
+There are several ways of doing map-reduce.  Here are a few off the top of my head:
+\begin{itemize}
+    \item shell-script
+    \item gnu-parallel
+    \item python multiprocessing pool
+    \item python MPI
+    \item condor/open science grid
+\end{itemize}
+
+Lets discuss a few in turn.  
+
+Here is a example shell script
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+
+do-job-1 &
+do-job-2 &
+wait
+\end{lstlisting}
+Pretty simple.  We do 2 jobs and we wait until it is finish.  Very simple, but it can be tedious to code especially for large number of jobs.
+
+Here is an example for gnu-parallel
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+
+seq 1 1 100 | parallel -j 8 python job-name {}
+
+\end{lstlisting}
+seq counts from 1 to 100 in steps of 1 and parallel execute up to 8 jobs at once wher the label in \{\} is the number labeled by seq.  Great way to doing an arbitrary number of jobs on a cluster.  gnu-parallel is usually used on one node, but multiple  nodes can use used if you know how. 
+
+There are a few ways of doing multiprocessing on python -- having a single python instance launch multiple instances and run different things on them.  Here I will introduce multiprocessing pools as I have experience with them.  Ideally, you should use python executors as this much more future proof, but the future proof part is fairly far away. 
+\begin{lstlisting}[language=Python]
+def func( x) : 
+    print(x)
+
+import multiprocessing as mp
+with mp.Pool(processes=4) as pool :
+    result = pool.map(func, np.arange(100))
+\end{lstlisting}
+This is awesome, map and reduce in essentially one one.  It returns the result as a list in the same order of the original map and thus is can be reduces as soon as one prefers.  
+
+Finally lets talk a bit about mpi.  The structure of MPI is as follows.  At startup N programs launch and are able to communicate with each other.  On startup you will get a comm object,
+\begin{lstlisting}[language=Python]
+from mpi4py import MPI
+
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+\end{lstlisting}
+The rank is the identifier of your process.  rank==0 is the first program and usually acts as an overseer for everything else.  So for instance suppose you want to do a map reduce in MPI. 
+\begin{lstlisting}[language=Python]
+
+if rank == 0:
+    data = [(i+1)**2 for i in range(size)]
+else:
+    data = None
+data = comm.scatter(data, root=0)
+\end{lstlisting}
+Here comm.scatter recognized that the data that is to be mapped comes from the rank == 0 process.  All other processes (including root) will then get a subset of data to play with.  To reduce, we must do a gather
+\begin{lstlisting}[language=Python]
+    data = comm.gather(data, root=0)
+    if rank == 0:
+        # do something with the data
+        pass
+\end{lstlisting}
+    
