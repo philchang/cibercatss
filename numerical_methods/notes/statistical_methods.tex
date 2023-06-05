@@ -49,6 +49,20 @@ r_i = \frac{x_i - \mu_i(\theta)}{\sigma_i}
 \ee
 Note that in this case that $r_i$ can be positive and negative.  
 
+\subsection{$\chi^2$ statistic}
+
+Sometimes we want to see how good a model fits the data.  In this case, we can define a $\chi^2$ statistic, which is 
+\be
+\chi^2 = \sum_{i=1}^N\left(\frac{x_i - \mu_i(\theta)}{\sigma_i}\right)^2
+\ee
+where $N$ denotes the number of data points.  Now $\chi^2$ get larger and larger as the number of data points increase.  So we need to define a ``normalized'' version of $\chi^2$, which is $\chi^2{\rm dof}$ of $\chi^2$ per degree of freedom.  For a model with p parameters and N data points the number of degrees of freedom is $N-p$. So
+\be
+\chi_{\rm dof}^2 = \frac{1}{N-k}\sum_{i=1}^N\left(\frac{x_i - \mu_i(\theta)}{\sigma_i}\right)^2
+\ee
+Now if the error is distributed normally, then for a good model $\chi_{\rm dof}$ is about unity.  Much larger and this means that model likely sucks given the error.  Much smaller might indicate the we don't understand our errors or their are overestimated.  Now generally, a order unity $\chi_{\rm dof}^2$ does not mean 
+
+Go ahead and now compute the $\chi_{\rm dof}^2$.  Is it order unity?  You should find out that it is much smaller than unity.  What does this tell you?
+
 \subsection{Markov-Chain Monte-Carlo}
 
 Suppose you are given some distribution of the form $P$ and you want to compute the expectation value of y.  Then the formal term is 
@@ -114,15 +128,13 @@ To encode all this, let us introduce the Metropolis-Hasting algorithm.
     \ee
 \end{enumerate}
 
-
-
-\subsection{Model Fitting with MCMC}
+\subsection{Bayesian Statistics}
 
 The biggest use of MCMC is its application to model fitting especially in the context of Bayesian modeling.  Usually in this case, we are concerned about the computation of the posterior distribution function $\pi(\vec{\theta};\vec{x})$ of parameters $\vec{\theta}$ given some data $\vec{x}$ and a prior $\pi(\vec{\theta})$.  We do this via Bayes' theorem
 \be
 \pi(\vec{\theta};\vec{x}) = \frac{\pi(\vec{\theta})p(\vec{x};\vec{\theta})}{p(\vec{x})}
 \ee
-where $p(\vec{x};\vec{\theta})$ is a likelihood function and $p(\vec{x}) = \int \pi(\vec{\theta})p(\vec{x};\vec{\theta})d\vec{\theta}$ is essentially the normalization.  This is the exact same problem that we encountered earlier where we needed to compute the expectation value of the energy in the Ising model.  However, in some ways this is simplier as the special substitutions are avoided in this case.  In essence, we want to compute
+where $p(\vec{x};\vec{\theta})$ is a likelihood function and $p(\vec{x}) = \int \pi(\vec{\theta})p(\vec{x};\vec{\theta})d\vec{\theta}$ is essentially the normalization. In essence, we want to compute
 \be
 p(\vec{x}) = \int \pi(\vec{\theta})p(\vec{x};\vec{\theta})d\vec{\theta}
 \ee
@@ -136,11 +148,11 @@ The key is that we only want to compute over the values of $\theta$ that really 
     \item Accept the proposal with probability $R$
 \end{enumerate}
 
-Now to make contact with the problem in the Ising model where we computed the expectation value of the energy, let me consider the computation of the expectation values of the parameters $\vec{\theta}$ over the distribution given by the posterior distribution, $\pi(\vec{\theta};\vec{x})$ or
+Lets consider the computation of the expectation values of the parameters $\vec{\theta}$ over the distribution given by the posterior distribution, $\pi(\vec{\theta};\vec{x})$ or
 \be
 \left<\vec{\theta}\right>_{\pi} = \int \vec{\theta}\pi(\vec{\theta};\vec{x}) d\vec{\theta} 
 \ee
-Now the analogue with the ising model is much clearer now.  If I compute this value, I get the expected value of the parameters.  Just as in the Ising model I get the expected value of the energy when integrating over a Maxwell-Boltzmann distribution.  Here I am integrate over the posterior distribution of the parameters.  
+If I compute this value, I get the expected value of the parameters.  If I plot out $\pi(\vec{\theta})$, I get the distribution of relevant $\theta$'s 
 
 Thus I can use MCMC for this.  A subtle, but important point is that when I take the average over the entire Markov chain, then the values of the parameters should reduce to the expected value.  However, if I take the distribution of the parameters, i.e., take a histogram of the values of the parameters in the chain, the distribution of the parameters is the posterior distribution.  This is a subtle, but important point and in case you ever wondered how these parameters distributions for various models where ever generated, now you know. 
 
@@ -213,10 +225,10 @@ Note that we accumulate the values of $\vec{\theta}$ as we evolve the chain and 
 
 %\lstinputlisting[language=Python]{code/mcmc.py}
 
-\begin{figure}
-    \centering\includegraphics[width=0.75\textwidth]{code/mcmc_1.pdf}
-    \caption{\label{fig:mcmc}}
-\end{figure}
+%\begin{figure}
+%    \centering\includegraphics[width=0.75\textwidth]{code/mcmc_1.pdf}
+%    \caption{\label{fig:mcmc}}
+%\end{figure}
 
 %\subsection{Simulated Annealing}
 
