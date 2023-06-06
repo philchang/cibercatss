@@ -97,3 +97,35 @@ Thus we have
 \ee
 So this converts a Nth order ODE to N first order ODEs, which we can solve.
 
+\subsection{Timestepping}
+
+One thing that we have not discussed is the choice for $\Delta t$.  For an interval between $t_0$ and $t_1$, a larger $\Delta t$ results in fewer computational steps, which makes things faster.  However, a smaller $\Delta t$ results in greater accuracy.  There is a limit with higher order methods on how accurate you can make a solution.  
+
+But there is another subtle issue that can happen.  In many instances the right hand side of an ODE can take on large (positive or negative) values for a limited set of circumstances.  In these cases, it is useful to have a variable $\Delta t$ -- small when things change quickly and large when things change slowly.  How can we estimate when these occurs.  
+
+Suppose you have an ODE of the form
+\be
+\frac{\partial y}{\partial t} = f(y,t)
+\ee
+Then according to Euler's method we have
+\be
+y_{n+1} - y_n = f(y_n,t_n)\Delta t
+\ee
+Now suppose we want the change in $\Delta y = |y_{n+1} - y_n| < \alpha |y_n|$.  This means that
+\be
+\alpha |y_n| = |f(y_n,t_n)|\Delta t_{\rm max}
+\ee
+This allows us to solve for $\Delta t_{\rm max}$ to be
+\be
+\Delta t_{\rm max} = \alpha \left|\frac{y_n}{f(y_n,t_n)}\right|
+\ee
+Typically, you don't want $\alpha$ to be too large nor too small.  I have found values between 0.01 and 0.1 to work well.  
+
+At the same time, we don't want to miss something if $\Delta t_{\rm max}$ is too large that it totally misses a change.  In this case, I like to pick a $\Delta t_{\rm max,0} = (t_1 - t_0)/N_0$, where $N_0$ is a number between 10 or 100, but this can change as well.
+
+So a selection for $\Delta t$ at a time $t$ would be
+\be
+\Delta t = min( t_1 - t, min(\Delta t_{\rm max,0}, \Delta t_{\rm max}))
+\ee
+
+Now lets try an example of this.
